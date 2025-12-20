@@ -1,0 +1,27 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="use_sim_time" default="true"/>
+  <arg name="configuration_directory" default="$(find scuttle_slam)/config"/>
+  <arg name="configuration_basename" default="scuttle_2d.lua"/>
+
+  <!-- Robot State Publisher (publishes TF from urdf) -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="30.0"/>
+    <param name="tf_prefix" value=""/>
+  </node>
+
+  <!-- Cartographer Node -->
+  <node name="cartographer_node" pkg="cartographer_ros" type="cartographer_node" output="screen" 
+        args="
+          -configuration_directory $(arg configuration_directory)
+          -configuration_basename $(arg configuration_basename)">
+    <remap from="scan" to="/scan"/>         <!-- LiDAR topic -->
+    <remap from="/tf" to="/tf"/>
+    <remap from="/tf_static" to="/tf_static"/>
+  </node>
+
+  <!-- Occupancy Grid Publisher (for saving map as .pgm and .yaml) -->
+  <node pkg="cartographer_ros" type="occupancy_grid_node" name="occupancy_grid_node" output="screen">
+    <param name="resolution" value="0.05"/> <!-- 5cm per pixel -->
+  </node>
+</launch>
