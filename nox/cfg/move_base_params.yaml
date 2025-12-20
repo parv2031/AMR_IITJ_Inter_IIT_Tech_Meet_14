@@ -1,0 +1,8 @@
+# move_base_params.yaml
+recovery_behaviors:
+  - {name: clear_costmap, type: "clear_costmap_recovery/ClearCostmapRecovery"}
+# single clear behavior is enough; move_base can call it when stuck, or you can trigger it yourself
+
+clear_costmap:
+  reset_distance: 0.4   # <-- set this to the radius r (meters) you want cleared
+  footprint_clearing_enabled: true

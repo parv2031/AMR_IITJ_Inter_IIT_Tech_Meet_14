@@ -1,0 +1,17 @@
+scan_filter_chain:
+  # 1. Remove anything closer than 0.4 m
+  - name: near_field_filter
+    type: laser_filters/LaserScanRangeFilter
+    params:
+      use_message_range_limits: false
+      lower_threshold: 0.4            # <--- remove points closer than 0.4 m
+      upper_threshold: 25.0
+      lower_replacement_value: inf
+      upper_replacement_value: inf
+
+  # 2. Keep only front 180 degrees (−90° to +90°)
+  - name: front_180_filter
+    type: laser_filters/LaserScanAngularBoundsFilter
+    params:
+      lower_angle: 0.0
+      upper_angle: 3.14159     # 180°
