@@ -1,0 +1,86 @@
+#include <Arduino.h>
+
+#define X_STEP 22
+#define X_DIR 24
+#define EN_PIN 26
+
+// Set to true if EN = LOW means "enabled" for your driver.
+// If your driver needs EN = HIGH to enable, set this to false.
+const bool ENABLE_ACTIVE_LOW = true;
+
+const int steps_per_mm = 200; // for 1/16 microstepping (adjust if wrong)
+
+void setup() {
+  Serial.begin(115200);
+  delay(200);
+
+  pinMode(X_STEP, OUTPUT);
+  pinMode(X_DIR, OUTPUT);
+  pinMode(EN_PIN, OUTPUT);
+
+  // Set EN according to driver active polarity
+  if (ENABLE_ACTIVE_LOW) digitalWrite(EN_PIN, LOW);  // enable
+  else digitalWrite(EN_PIN, HIGH); // enable (if active-high)
+
+  // Make sure pins start low
+  digitalWrite(X_STEP, LOW);
+  digitalWrite(X_DIR, LOW);
+
+  Serial.println("Setup done. Running quick self-test...");
+  delay(200);
+  testStep();    // quick step test so you can see if STEP toggles
+  delay(500);
+}
+
+void loop() {
+  // quick small test first
+  Serial.println("Move +5 mm slowly (test)");
+  moveX(5.0, 100); // try slow first: 1500us high + 1500us low = ~333 steps/s
+  delay(1500);
+
+  Serial.println("Move -5 mm slowly (test)");
+  moveX(-5.0, 100);
+  delay(1500);
+
+  // If these work, you can try bigger moves. Comment out above and use larger moves.
+  while (true) {
+    Serial.println("Done with tests. Reset to repeat.");
+    delay(3000);
+  }
+}
+
+void testStep() {
+  // toggles STEP pin 10 times so you can verify pin toggling with an LED/meter
+  for (int i = 0; i < 10; ++i) {
+    digitalWrite(X_STEP, HIGH);
+    delayMicroseconds(500);
+    digitalWrite(X_STEP, LOW);
+    delayMicroseconds(500);
+  }
+  Serial.println("testStep done (10 pulses).");
+}
+
+void moveX(float mm, unsigned int step_delay_us) {
+  if (step_delay_us < 10) step_delay_us = 10; // safety floor
+  // compute steps reliably
+  unsigned long total_steps = (unsigned long)(fabs(mm) * (float)steps_per_mm + 0.5f);
+
+  // direction: HIGH for positive displacement (you can invert if needed)
+  digitalWrite(X_DIR, (mm > 0.0f) ? HIGH : LOW);
+
+  Serial.print("moveX called: mm=");
+  Serial.print(mm);
+  Serial.print(", steps=");
+  Serial.print(total_steps);
+  Serial.print(", delay(us)=");
+  Serial.println(step_delay_us);
+
+  for (unsigned long i = 0; i < total_steps; ++i) {
+    digitalWrite(X_STEP, HIGH);
+    delayMicroseconds(step_delay_us);
+    digitalWrite(X_STEP, LOW);
+    delayMicroseconds(step_delay_us);
+  }
+  Serial.println("moveX finished.");
+}
+
